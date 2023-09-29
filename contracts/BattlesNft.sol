@@ -64,4 +64,23 @@ contract BattleNft is ERC721URIStorage {
                 )
             );
     }
+
+    function mint() public {
+        _tokenIds.increment();
+        uint256 newItemId = _tokenIds.current();
+        _safeMint(msg.sender, newItemId);
+        tokenIdToLevels[newItemId] = 0;
+        _setTokenURI(newItemId, getTokenURI(newItemId));
+    }
+
+    function train(uint256 tokenId) public {
+        require(_exists(tokenId), "Please use an existing token");
+        require(
+            ownerOf(tokenId) == msg.sender,
+            "You must own this token to train it"
+        );
+        uint256 currentLevel = tokenIdToLevels[tokenId];
+        tokenIdToLevels[tokenId] = currentLevel + 1;
+        _setTokenURI(tokenId, getTokenURI(tokenId));
+    }
 }
