@@ -39,7 +39,7 @@ contract BattleNft is ERC721URIStorage {
             );
     }
 
-    function getLevels(uint256 tokenId) view poblic returns (string memory) {
+    function getLevels(uint256 tokenId) public view returns (string memory) {
         uint256 levels = tokenIdToLevels[tokenId];
         return levels.toString();
     }
