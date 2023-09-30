@@ -12,11 +12,20 @@ contract BattleNft is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    mapping(uint256 => uint256) public tokenIdToLevels;
+    struct BattlesNfts {
+        uint256 levels;
+        uint256 speed;
+        uint256 strength;
+        uint256 life;
+    }
+
+    mapping(uint256 => BattlesNfts) public tokenIdtoBattleNft;
 
     constructor() ERC721("Battles", "BTLS") {}
 
-    function generateCharacter(uint256 tokenId) public returns (string memory) {
+    function generateCharacter(
+        uint256 tokenId
+    ) public view returns (string memory) {
         bytes memory svg = abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350">',
             "<style>.base { fill: white; font-family: serif; font-size: 14px; }</style>",
@@ -27,6 +36,12 @@ contract BattleNft is ERC721URIStorage {
             '<text x="50%" y="50%" class="base" dominant-baseline="middle" text-anchor="middle">',
             "Levels: ",
             getLevels(tokenId),
+            "Life: ",
+            getLife(tokenId),
+            "Speed: ",
+            getSpeed(tokenId),
+            "Strength: ",
+            getStrength(tokenId),
             "</text>",
             "</svg>"
         );
@@ -39,12 +54,42 @@ contract BattleNft is ERC721URIStorage {
             );
     }
 
-    function getLevels(uint256 tokenId) public view returns (string memory) {
-        uint256 levels = tokenIdToLevels[tokenId];
+    function random(uint number) internal view returns (uint) {
+        return
+            uint(
+                keccak256(
+                    abi.encodePacked(
+                        block.timestamp,
+                        block.prevrandao,
+                        msg.sender
+                    )
+                )
+            ) % number;
+    }
+
+    function getLevels(uint256 tokenId) internal view returns (string memory) {
+        uint256 levels = tokenIdtoBattleNft[tokenId].levels;
         return levels.toString();
     }
 
-    function getTokenURI(uint256 tokenId) public returns (string memory) {
+    function getLife(uint256 tokenId) internal view returns (string memory) {
+        uint256 life = tokenIdtoBattleNft[tokenId].life;
+        return life.toString();
+    }
+
+    function getSpeed(uint256 tokenId) internal view returns (string memory) {
+        uint256 speed = tokenIdtoBattleNft[tokenId].speed;
+        return speed.toString();
+    }
+
+    function getStrength(
+        uint256 tokenId
+    ) internal view returns (string memory) {
+        uint256 strength = tokenIdtoBattleNft[tokenId].strength;
+        return strength.toString();
+    }
+
+    function getTokenURI(uint256 tokenId) public view returns (string memory) {
         bytes memory dataURI = abi.encodePacked(
             "{",
             '"name": "Battles #',
@@ -69,7 +114,10 @@ contract BattleNft is ERC721URIStorage {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-        tokenIdToLevels[newItemId] = 0;
+        tokenIdtoBattleNft[newItemId].levels = 0;
+        tokenIdtoBattleNft[newItemId].life = random(newItemId);
+        tokenIdtoBattleNft[newItemId].speed = random(newItemId);
+        tokenIdtoBattleNft[newItemId].strength = random(newItemId);
         _setTokenURI(newItemId, getTokenURI(newItemId));
     }
 
@@ -79,8 +127,10 @@ contract BattleNft is ERC721URIStorage {
             ownerOf(tokenId) == msg.sender,
             "You must own this token to train it"
         );
-        uint256 currentLevel = tokenIdToLevels[tokenId];
-        tokenIdToLevels[tokenId] = currentLevel + 1;
+        tokenIdtoBattleNft[tokenId].levels += 1;
+        tokenIdtoBattleNft[tokenId].life += 1;
+        tokenIdtoBattleNft[tokenId].speed += 10;
+        tokenIdtoBattleNft[tokenId].strength += 12;
         _setTokenURI(tokenId, getTokenURI(tokenId));
     }
 }
